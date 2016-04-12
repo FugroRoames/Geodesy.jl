@@ -37,5 +37,7 @@ end
 
 include("points.jl")
 include("conversion.jl")
+include("crs.jl")
+include("geotransform.jl")
 
 end # @testset "Geodesy"

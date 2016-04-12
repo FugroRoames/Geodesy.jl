@@ -10,6 +10,10 @@ export
     LLA,
     LatLon,
 
+    # CRS/Position
+    CRS,
+    Position,
+
     # Other types
     Ellipsoid,
 
@@ -19,11 +23,14 @@ export
     NAD27, nad27,
 
     # Methods
+    geotransform,
     distance
 
 
 include("points.jl")
 include("datums.jl")
+include("crs.jl")
 include("conversion.jl")
+include("geotransform.jl")
 
 end # module Geodesy

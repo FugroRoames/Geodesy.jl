@@ -4,8 +4,8 @@
 ################################
 
 ECEF(ecef::ECEF, datum) = ecef
-ECEF(lla::LLA, datum) = lla
-ECEF(enu::ENU, datum) = enu
+LLA(lla::LLA, datum) = lla
+ENU(enu::ENU, datum) = enu
 
 
 ###############################
@@ -91,3 +91,13 @@ function ENU(lla::LLA, lla_ref::LLA, datum::Ellipsoid)
     return ENU(ecef, lla_ref, datum)
 end
 ENU(lla::LLA, lla_ref::LLA, datum) = ENU(lla, lla_ref, ellipsoid(datum))
+
+###################################
+### Position to raw coordinates ###
+###################################
+
+ECEF(pos::Position) = ECEF(pos.x, pos.datum)
+LLA(pos::Position) = LLA(pos.x, pos.datum)
+
+# ENU coordinates take and give reference point
+ENU(pos::Position{ENU}) = pos.x
