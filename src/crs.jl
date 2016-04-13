@@ -5,8 +5,8 @@
 A co-ordinate reference system `CRS{CoordinateSystem, Datum}` represents the
 information required to georeference a point in the co-ordinate system. The
 `datum` field may be a singleton instance (e.g. wgs84 of singleton type WGS84)
-or a user-defined object containing any necessary information to perform any
-necessary CRS transformations.
+or a user-defined object containing any information necessary to perform any
+intended CRS transformations.
 
 Positions may be converted into a new CRS using the `geotransform` function:
     geotransform(crs::CRS, position::Position)
@@ -39,10 +39,11 @@ function CRS{CoordinateSystem, Datum}(x::Position{CoordinateSystem, Datum})
 end
 
 function Base.show{CoordinateSystem, Datum}(io::IO, crs::CRS{CoordinateSystem, Datum})
-    print(io, "CRS in $CoordinateSystem coordiantes using datum $(crs.datum)")
+    print(io, "CRS($CoordinateSystem, datum=$(crs.datum))")
 end
-function Base.show{Datum}(io::IO, crs::CRS{ENU, Datum})
-    print(io, "CRS in ENU coordiantes from origin $(crs.datum)")
+# Flatten the output for ENU Positions to make them more readable
+function Base.show{Datum <: Position}(io::IO, crs::CRS{ENU, Datum})
+    print(io, "CRS(ENU, origin=$(crs.datum.x), datum=$(crs.datum.datum))")
 end
 
 # ----------------------------------------------------------
@@ -53,5 +54,9 @@ Base.call{CS}(crs::CRS{CS}, x::CS) = Position(x, crs.datum)
 Base.call{CS}(crs::CRS{CS}, x...) = Position(CS(x...), crs.datum)
 
 function Base.show{CoordinateSystem, Datum}(io::IO, pos::Position{CoordinateSystem, Datum})
-    print(io, "$(pos.x) in datum $(pos.datum)")
+    print(io, "Position($(pos.x), datum=$(pos.datum))")
+end
+# Flatten the output for ENU Positions to make them more readable
+function Base.show{Datum <: Position}(io::IO, pos::Position{ENU, Datum})
+    print(io, "Position($(pos.x), origin=$(pos.datum.x), datum=$(pos.datum.datum))")
 end
