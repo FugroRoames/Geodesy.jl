@@ -92,6 +92,37 @@ function ENU(lla::LLA, lla_ref::LLA, datum::Ellipsoid)
 end
 ENU(lla::LLA, lla_ref::LLA, datum) = ENU(lla, lla_ref, ellipsoid(datum))
 
+
+###############################
+### ENU to ECEF coordinates ###
+###############################
+
+function ECEF(enu::ENU, lla_ref::LLA, datum)
+    ϕdeg, λdeg, h =  lla_ref.lat, lla_ref.lon, lla_ref.alt
+
+    # Reference
+    ecef_ref = ECEF(lla_ref, datum)
+
+    # Compute rotation matrix
+    sinλ, cosλ = sind(λdeg), cosd(λdeg)
+    sinϕ, cosϕ = sind(ϕdeg), cosd(ϕdeg)
+
+    # Rᵀ = [-sinλ -cosλ*sinϕ cosλ*cosϕ
+    #        cosλ -sinλ*sinϕ sinλ*cosϕ
+    #         0.0       cosϕ      sinϕ]
+    # Δx, Δy, Δz = Rᵀ * [east, north, up]
+    Δx = -sinλ * enu.e + -cosλ*sinϕ * enu.n + cosλ*cosϕ * (enu.u + h)
+    Δy =  cosλ * enu.e + -sinλ*sinϕ * enu.n + sinλ*cosϕ * (enu.u + h)
+    Δz =   0.0 * enu.e +       cosϕ * enu.n +      sinϕ * (enu.u + h)
+
+    X = ecef_ref.x + Δx
+    Y = ecef_ref.y + Δy
+    Z = ecef_ref.z + Δz
+
+    return ECEF(X,Y,Z)
+end
+
+
 ###################################
 ### Position to raw coordinates ###
 ###################################
