@@ -21,6 +21,7 @@ export
     WGS84, wgs84,
     OSGB36, osgb36,
     NAD27, nad27,
+    GRS80, grs80,
 
     # Methods
     geotransform,
