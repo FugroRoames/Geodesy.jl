@@ -34,3 +34,19 @@ function geotransform{CS1,CS2,Datum}(crs::CRS{ENU,Position{CS1,Datum}}, pos::Pos
         error("Transformation from $(CRS(pos)) to $crs not defined")
     end
 end
+
+function geotransform{CS1,CS2,Datum}(crs::CRS{CS1,Datum}, pos::Position{ENU,Position{CS2,Datum}})
+    if pos.datum.datum == crs.datum
+        Position(CS1(pos.x, pos.datum.x, crs.datum), crs.datum)
+    else
+        error("Transformation from $(CRS(pos)) to $crs not defined")
+    end
+end
+
+function geotransform{CS1, CS2, Datum}(crs::CRS{ENU, Position{CS1, Datum}}, pos::Position{ENU, Position{CS2, Datum}})
+    if CS1 == CS2 && crs.datum == pos.datum
+        return pos
+    else
+        error("Transformation between ENU origins has not been implemented. Use an intermediatary reference frame instead.")
+    end
+end

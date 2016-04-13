@@ -22,7 +22,18 @@
     @xyz_approx_eq lla_new.x lla.x
 
     # LLA <-> ENU
-    #enu_new = geotransform(crs_enu, lla)
-    #@xyz_approx_eq enu_new.x enu.x
-    #@xyz_approx_eq enu_new.datum.x enu.datum.x
+    enu_new = geotransform(crs_enu, lla)
+    @xyz_approx_eq enu_new.x enu.x
+    @xyz_approx_eq enu_new.datum.x enu.datum.x
+
+    lla_new = geotransform(crs_lla, enu)
+    @xyz_approx_eq lla_new.x lla.x
+
+    # ECEF <-> ENU
+    enu_new = geotransform(crs_enu, ecef)
+    @xyz_approx_eq enu_new.x enu.x
+    @xyz_approx_eq enu_new.datum.x enu.datum.x
+
+    ecef_new = geotransform(crs_ecef, enu)
+    @xyz_approx_eq ecef_new.x ecef.x
 end
