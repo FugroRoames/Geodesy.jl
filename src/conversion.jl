@@ -86,11 +86,10 @@ ENU(ecef::ECEF, lla_ref::LLA, datum) = ENU(ecef, lla_ref, ellipsoid(datum))
 ##############################
 
 # Given a reference point for linarization
-function ENU(lla::LLA, lla_ref::LLA, datum::Ellipsoid)
+function ENU(lla::LLA, lla_ref::LLA, datum)
     ecef = ECEF(lla, datum)
     return ENU(ecef, lla_ref, datum)
 end
-ENU(lla::LLA, lla_ref::LLA, datum) = ENU(lla, lla_ref, ellipsoid(datum))
 
 
 ###############################
@@ -98,7 +97,7 @@ ENU(lla::LLA, lla_ref::LLA, datum) = ENU(lla, lla_ref, ellipsoid(datum))
 ###############################
 
 function ECEF(enu::ENU, lla_ref::LLA, datum)
-    ϕdeg, λdeg, h =  lla_ref.lat, lla_ref.lon, lla_ref.alt
+    ϕdeg, λdeg =  lla_ref.lat, lla_ref.lon
 
     # Reference
     ecef_ref = ECEF(lla_ref, datum)
@@ -111,15 +110,25 @@ function ECEF(enu::ENU, lla_ref::LLA, datum)
     #        cosλ -sinλ*sinϕ sinλ*cosϕ
     #         0.0       cosϕ      sinϕ]
     # Δx, Δy, Δz = Rᵀ * [east, north, up]
-    Δx = -sinλ * enu.e + -cosλ*sinϕ * enu.n + cosλ*cosϕ * (enu.u + h)
-    Δy =  cosλ * enu.e + -sinλ*sinϕ * enu.n + sinλ*cosϕ * (enu.u + h)
-    Δz =   0.0 * enu.e +       cosϕ * enu.n +      sinϕ * (enu.u + h)
+    Δx = -sinλ * enu.e + -cosλ*sinϕ * enu.n + cosλ*cosϕ * enu.u
+    Δy =  cosλ * enu.e + -sinλ*sinϕ * enu.n + sinλ*cosϕ * enu.u
+    Δz =   0.0 * enu.e +       cosϕ * enu.n +      sinϕ * enu.u
 
     X = ecef_ref.x + Δx
     Y = ecef_ref.y + Δy
     Z = ecef_ref.z + Δz
 
     return ECEF(X,Y,Z)
+end
+
+##############################
+### ENU to LLA coordinates ###
+##############################
+
+# Given a reference point for linarization
+function LLA(enu::ENU, lla_ref::LLA, datum)
+    ecef = ECEF(enu, lla_ref, datum)
+    return LLA(ecef, datum)
 end
 
 
@@ -132,3 +141,5 @@ LLA(pos::Position) = LLA(pos.x, pos.datum)
 
 # ENU coordinates take and give reference point
 ENU(pos::Position{ENU}) = pos.x
+ECEF(pos::Position{ENU}) = ECEF(pos.x, pos.datum.x, pos.datum.datum)
+LLA(pos::Position{ENU}) = LLA(pos.x, pos.datum.x, pos.datum.datum)

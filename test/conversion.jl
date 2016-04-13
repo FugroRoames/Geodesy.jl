@@ -43,5 +43,12 @@
 
         @xyz_approx_eq ENU(lla, lla2, wgs84) enu2
 
+        ecef2 = ECEF(enu2, lla2, wgs84)
+
+        @xyz_approx_eq ecef2 ecef
+
+        lla3 = LLA(enu2, lla2, wgs84)
+
+        @xyz_approx_eq lla3 lla
     end
 end # @testset
