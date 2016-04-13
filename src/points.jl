@@ -29,10 +29,6 @@ immutable LatLon
     lon::Float64
 end
 LatLon(lla::LLA) = LatLon(lla.lat, lla.lon)
-function LatLon(x, datum)
-    lla = LLA(x, datum)
-    return LatLon(lla.lat, lla.lon)
-end
 
 function Base.show(io::IO, ll::LatLon)
     # Avoid any confusion regarding order of latitude and longitude

@@ -5,7 +5,8 @@
 
 ECEF(ecef::ECEF, datum) = ecef
 LLA(lla::LLA, datum) = lla
-ENU(enu::ENU, datum) = enu
+LatLon(ll::LatLon, datum) = ll
+ENU(enu::ENU, datum) = enu # Does this always make sense (if datum happens to be a reference point or otherwise)? Three argument version?
 
 
 ###############################
@@ -50,6 +51,14 @@ function LLA(ecef::ECEF, datum::Ellipsoid)
 end
 LLA(ecef::ECEF, datum) = LLA(ecef, ellipsoid(datum))
 
+######################################
+### Anything to LatLon coordinates ###
+######################################
+
+function LatLon(x, datum)
+    lla = LLA(x, datum)
+    return LatLon(lla.lat, lla.lon)
+end
 
 ###############################
 ### ECEF to ENU coordinates ###
