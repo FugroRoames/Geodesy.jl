@@ -2,43 +2,47 @@
 # Coordinate reference systems
 # ----------------------------------------------------------
 """
-A co-ordinate reference system `CRS{CoordinateSystem, Datum}` represents the
-information required to georeference a point in the co-ordinate system. The
+A co-ordinate reference system `CRS{CoordinateType, Datum}` represents the
+information required to georeference a point in the coordinate system. The
 `datum` field may be a singleton instance (e.g. wgs84 of singleton type WGS84)
 or a user-defined object containing any information necessary to perform any
-intended CRS transformations.
+intended CRS transformations. Thus, `datum` may also need to include supplementary
+information to define the coordinate system as well as the standard geodetic
+datum (for example, the georeferenced origin of an ENU frame, which is itself
+represented by a `Position` with its own geodetic `datum`).
 
 Positions may be converted into a new CRS using the `geotransform` function:
     geotransform(crs::CRS, position::Position)
 """
-immutable CRS{CoordinateSystem, Datum}
+immutable CRS{CoordinateType, Datum}
     datum::Datum
 end
 # ----------------------------------------------------------
 # Fully georeferenced positions
 # ----------------------------------------------------------
 """
-A `Position{CoordinateSystem, Datum}` includes all the information to
-georeference a point by including both the position's co-ordinates (in field `x`)
-and the datum information (in field `datum`).
+A `Position{CoordinateType, Datum}` includes all the information to
+georeference a point by including both the position's coordinates in field `x`,
+and the datum (plus other supplementary coordinate system information - see CRS)
+in field `datum`.
 
 Positions may be converted into a new CRS using the `geotransform` function:
     geotransform(crs::CRS, position::Position)
 """
-immutable Position{CoordinateSystem, Datum}
-    x::CoordinateSystem
+immutable Position{CoordinateType, Datum}
+    x::CoordinateType
     datum::Datum
 end
 
 # ----------------------------------------------------------
 # Coordinate reference system methods
 # ----------------------------------------------------------
-CRS{CS,D}(::Type{CS}, datum::D) = CRS{CS,D}(datum)
-function CRS{CoordinateSystem, Datum}(x::Position{CoordinateSystem, Datum})
-    CRS{CoordinateSystem, Datum}(x.datum)
+CRS{CoordinateType,Datum}(::Type{CoordinateType}, datum::Datum) = CRS{CoordinateType,Datum}(datum)
+function CRS{CoordinateType, Datum}(x::Position{CoordinateType, Datum})
+    CRS{CoordinateType, Datum}(x.datum)
 end
 
-function Base.show{CoordinateSystem, Datum}(io::IO, crs::CRS{CoordinateSystem, Datum})
+function Base.show{CoordinateType, Datum}(io::IO, crs::CRS{CoordinateType, Datum})
     print(io, "CRS($CoordinateSystem, datum=$(crs.datum))")
 end
 # Flatten the output for ENU Positions to make them more readable
@@ -49,11 +53,11 @@ end
 # ----------------------------------------------------------
 # Fully georeferenced positions methods
 # ----------------------------------------------------------
-Position{CS}(x::CS, crs::CRS{CS}) = Position(x, crs.datum)
-Base.call{CS}(crs::CRS{CS}, x::CS) = Position(x, crs.datum)
-Base.call{CS}(crs::CRS{CS}, x...) = Position(CS(x...), crs.datum)
+Position{CoordinateType}(x::CoordinateType, crs::CRS{CoordinateType}) = Position(x, crs.datum)
+Base.call{CoordinateType}(crs::CRS{CoordinateType}, x::CoordinateType) = Position(x, crs.datum)
+Base.call{CoordinateType}(crs::CRS{CoordinateType}, x...) = Position(CoordinateType(x...), crs.datum)
 
-function Base.show{CoordinateSystem, Datum}(io::IO, pos::Position{CoordinateSystem, Datum})
+function Base.show{CoordinateType, Datum}(io::IO, pos::Position{CoordinateType, Datum})
     print(io, "Position($(pos.x), datum=$(pos.datum))")
 end
 # Flatten the output for ENU Positions to make them more readable

@@ -16,6 +16,7 @@ export
 
     # Other types
     Ellipsoid,
+    ellipsoid,
 
     # Constants
     WGS84, wgs84,
@@ -57,9 +58,5 @@ function ENU(x::Union{LLA,ECEF}, y::LLA)
     warn("Deprecation warning: default datum choice `wgs84` deprecated (also note new lower case identifier).")
     ENU(x, y, wgs84)
 end
-
-
-
-
 
 end # module Geodesy

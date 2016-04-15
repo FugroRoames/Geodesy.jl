@@ -19,9 +19,11 @@ coordinates and datums based on elliptical models of the world.
 
 The above images gives a quick picture of the components of the coordinate reference systems used in geodesy, with the data structure link showing the data structure used by the EPSG authority for the WGS84 (GPS) coordinate reference system as shown on the [EPSG website](http://www.epsg-registry.org/)).
 
-The `Geodesy` package implements these components as Julia types for coordinate systems, datums, abstract coordinate reference *systems* and fully georeferenced `Position`s. Following this, `Geodesy` coordinate types (such as "earth centered, earth fixed" `ECEF`, "longitude-latitude-altitude" `LLA`, and "east-north-up" `ENU`) do not have full datum knowledge and require supplemental information to perform coordinate transformations. The datum provides this missing information by, for example, indicating a particular elliptical model of the earth. Thus, additional types are provided to wrap the combined coordinates and datum for convenience and extensibility.
+The `Geodesy` package implements these components as Julia types for coordinates, datums, abstract coordinate reference *systems* and fully georeferenced `Position`s. Following this, `Geodesy` coordinate types (such as "earth centered, earth fixed" `ECEF`, "longitude-latitude-altitude" `LLA`, and "east-north-up" `ENU`) are raw data formats and do **not** have knowledge of relevant datum. They require supplemental information to perform coordinate transformations, but are appropriate storage containers for managing and performing calculations on large numbers of points assumed to be in the same CRS.
 
-A `CRS` (coordinate reference system) is a concrete Julia type providing both the datum and the coordinate *system* used, while the related `Position` type includes this information plus the numerical coordinate *data*. This allows us to transform a `Position` into a new `CRS` with ease via the `geotransform` function:
+While the term "datum" originally referred to a measurement procedure for determining the coordinates of points, here we mean something slightly different. Pragmatically, the datum provides the necessary information to perform any required coordinate/datum transformations, and it can be an instance of any Julia type. The datum may, for example, indicate a particular elliptical model of the earth, allowing one to convert between latitude/longitude to a Cartesian frame. Or it might indicate the the `Position` of the origin of an `ENU` frame, allowing one to return to a geocentric coordinate when required. `Geodesy` provides two additional types to wrap the combined coordinates and datum for convenience and extensibility.
+
+A `CRS` (coordinate reference system) is a concrete Julia type providing both the datum and the coordinate *format* used, while the related `Position` type includes this information plus the numerical coordinate *data*. This allows us to transform a `Position` into a new `CRS` with ease via the `geotransform` function:
 
 ``` julia
     geotransform(new_crs::CRS, position::Position) # -> new_position::Position
@@ -29,16 +31,14 @@ A `CRS` (coordinate reference system) is a concrete Julia type providing both th
 
 The interface is designed to be extended in many ways, and allows for:
 
-  * User-defined types for coordinate systems (of arbitrary dimension)
+  * User-defined types for storing coordinates (of arbitrary dimension)
   * User-defined datums (which may either be zero-cost Julia singletons or contain real data to assist in performing transformations)
-  * More complex world positioning and datums, such UTM projections and datum transformations provided by the `Proj4.jl` package.
+  * More complex world positioning and datums, such as wrappers for the UTM projections and datum transformations provided by the `Proj4.jl` package.
   * Engineering datums and complex, highly dynamic datums.
 
-### "Coordinate System" Types
+### Coordinate Types
 
-The below types are parameterised by a reference datum. Note that the coordinate system types only "understands" the datum's ellipse; however using a datum type as a parameter is a convenient way to get the reference ellipse while also stopping direct comparison of points from different datums (that may use the same ellipse).  A discussion on datums vs ellipsoids is given later in this readme.
-
-Some common ellipsoidal datums are provided as the exported (singleton) constants `wgs84`, `grs80`, `osgb36` and `nad27`, and custom ellipse's can also be used via the `Ellipsoid` type. Angles a presumed to be in degrees and lengths in metres.
+The below types are included in `Geodesy` by default.
 
 1. `LLA`   - [(Geodetic) latitude](https://en.wikipedia.org/wiki/Latitude#Geodetic_and_geocentric_latitudes), longitude, altitude coordinate.
 
@@ -51,16 +51,19 @@ interpret as being part of the datum — it is our "peg in the ground", so to sp
 
 4. `ENU`   - East North Up position in the local coordinate frame.
 
-In this package, we refer to the *coordinate system* by the Julia type, and to
-the actual coordinate values as instances of the type.
-
-These types can be used to perform *coordinate system* transformations by
+These types can be used to perform transformations to new coordinate systems by
 including extra information about the datum. For example, to convert from `LLA`
-to `ECEF`, a constructor is provided.
+to `ECEF`, a constructor is provided, `ECEF(lla::LLA, datum)`. Note that the
+base `Geodesy` coordinate system types only "understands" the datum's ellipsoid.
+A discussion on datums vs ellipsoids is given below. Some common
+ellipsoidal datums are provided as the exported (singleton) constants `wgs84`,
+`grs80`, `osgb36` and `nad27`, and custom ellipse's can also be used via the
+`Ellipsoid` type. During the transformation, angles are presumed to be in
+degrees and lengths in meters.
 
 ```julia
 lla = LLA(-27.468937, 153.023628, 0.0) # City Hall, Brisbane, Australia
-ecef = ECEF(LLA, wgs84) # Cartesian coordinates from centre of earth using the common WGS 84 datum
+ecef = ECEF(lla, wgs84) # Cartesian coordinates from centre of earth using the common WGS 84 datum
 ```
 
 Conversion to and from ENU types requires both the origin and datum.
@@ -75,7 +78,7 @@ enu = ENU(lla, lla_origin, wgs84) # East, north, up distances between City Hall 
 Datums can be implemented as any Julia type. Often, this may be a simple singleton
 type like `wgs84 = WGS84()`, which via multiple dispatch allows us to define
 the coordinate transformations above. However, some datums may contain data
-which may only be determined at run time, such as an ENU frame where the
+which may only be determined at run time, such as an `ENU` frame where the
 origin is not known at compile time.
 
 In the Geodesy package, you can overload the `ellipsoid` function to provide the
@@ -88,20 +91,20 @@ Typical geodetic datums contain more information than just the reference ellipso
 
 Comparing points in two different datums requires knowing the transformation to align the ellipses. However, this information is not provided within the `Geodesy` package (see the `Proj4.jl` package for this functionality over a wide range of geodetic datums).
 
-### The `CRS` type — coordinate reference system
+### The `CRS` type — coordinate reference systems
 
-Coordinate reference system types `CRS{CS, Datum}(datum::Datum)` have knowledge of both the coordinate *type* `CS` and the `datum` which is required to map a known point on the Earth to a position in the coordinate system. Note that `datum` is an instance of type `Datum` and may or may not contain real data in memory.
+Coordinate reference system types `CRS{CoordinateType, Datum}(datum::Datum)` have knowledge of both the coordinate *type* `CoordinateType` and the `datum` which is required to map a known `Position` on the Earth to a set of coordinates within the `CRS`. Note that `datum` is an instance of type `Datum` and may or may not contain real data in memory. An example of a zero-byte datum is `wgs84 = WGS84()`.
 
 Examples of some `CRS`s are:
 
 ```julia
-# An ECEF coordiante system based on the WGS 84 datum
+# An ECEF coordinate reference system based on the WGS 84 datum
 CRS(ECEF, wgs84) == CRS{ECEF, WGS84}(wgs84)
 
-# An LLA coordiante system based on the OSGB 36 datum
+# An LLA coordinate reference system based on the OSGB 36 datum
 CRS(LLA, osgb36) == CRS{LLA, OSGB36}(osgb36)
 
-# An ENU coordinate system centred on City Hall, Brisbane, Australia
+# An ENU coordinate reference system centred on City Hall, Brisbane, Australia
 CRS(ENU, Position(LLA(-27.468937, 153.023628, 0.0), grs80))
 ```
 
@@ -112,8 +115,8 @@ while the third will use 24 bytes (three `Float64`s).
 
 ### The `Position` type — a point in a coordinate reference system
 
-The `Position{CS, Datum}(x::CS, datum::Datum)` type includes both the coordinates
-of a point `x` in the coordinate system `CS`, and an instance of the `datum` similar to
+The `Position{CoordinateType, Datum}(x::CoordinateType, datum::Datum)` type includes both the coordinates
+of a point `x` in the as a `CoordinateType`, and an instance of the `datum` similar to
 the `CRS` type above.
 
 Several constructor patterns for `Position` are defined:
@@ -152,7 +155,7 @@ This function generalizes nicely to arbitrarily complex datums for input and
 output. The `geoconvert` function can be easily specialized for new types so
 that users may define custom transformations.
 
-Additionally, the coordinate system type constructors (`LLA`, `ECEF`, etc) are
+Additionally, the coordinate type constructors (`LLA`, `ECEF`, etc) are
 available to use as a low-level interface. Where it make sense, it may be best
 to implement the conversions in these type constructors and direct
 `geotransform` to use these, so the user may choose between the low-level and

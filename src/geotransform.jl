@@ -18,16 +18,16 @@ function geotransform(crs::CRS, pos::Position)
     error("Transformation from $(CRS(pos)) to $crs not defined")
 end
 
-function geotransform{CS1,CS2,Datum}(crs::CRS{CS1,Datum}, pos::Position{CS2,Datum})
+function geotransform{CoordinateType1,CoordinateType2,Datum}(crs::CRS{CoordinateType1,Datum}, pos::Position{CoordinateType2,Datum})
     if crs.datum == pos.datum
         # Co-ordinate systems can perform transformations upon construction
-        return Position(CS1(pos.x, crs.datum), crs.datum)
+        return Position(CoordinateType1(pos.x, crs.datum), crs.datum)
     else
         error("Transformation from $(CRS(pos)) to $crs not defined")
     end
 end
 
-function geotransform{CS1,CS2,Datum}(crs::CRS{ENU,Position{CS1,Datum}}, pos::Position{CS2,Datum})
+function geotransform{CoordinateType1,CoordinateType2,Datum}(crs::CRS{ENU,Position{CoordinateType1,Datum}}, pos::Position{CoordinateType2,Datum})
     if crs.datum.datum == pos.datum
         Position(ENU(pos.x, crs.datum.x, crs.datum.datum), crs.datum)
     else
@@ -35,16 +35,16 @@ function geotransform{CS1,CS2,Datum}(crs::CRS{ENU,Position{CS1,Datum}}, pos::Pos
     end
 end
 
-function geotransform{CS1,CS2,Datum}(crs::CRS{CS1,Datum}, pos::Position{ENU,Position{CS2,Datum}})
+function geotransform{CoordinateType1,CoordinateType2,Datum}(crs::CRS{CoordinateType1,Datum}, pos::Position{ENU,Position{CoordinateType2,Datum}})
     if pos.datum.datum == crs.datum
-        Position(CS1(pos.x, pos.datum.x, crs.datum), crs.datum)
+        Position(CoordinateType1(pos.x, pos.datum.x, crs.datum), crs.datum)
     else
         error("Transformation from $(CRS(pos)) to $crs not defined")
     end
 end
 
-function geotransform{CS1, CS2, Datum}(crs::CRS{ENU, Position{CS1, Datum}}, pos::Position{ENU, Position{CS2, Datum}})
-    if CS1 == CS2 && crs.datum == pos.datum
+function geotransform{CoordinateType1, CoordinateType2, Datum}(crs::CRS{ENU, Position{CoordinateType1, Datum}}, pos::Position{ENU, Position{CoordinateType2, Datum}})
+    if CoordinateType1 == CoordinateType2 && crs.datum == pos.datum
         return pos
     else
         error("Transformation between ENU origins has not been implemented. Use an intermediatary reference frame instead.")
