@@ -45,6 +45,7 @@ const eGRS80      = Ellipsoid(a = "6378137.0", f_inv = "298.257222100882711243")
 const eHayford    = Ellipsoid(a = "6378388.0", f_inv = "297.0")
 const eClarke1866 = Ellipsoid(a = "6378206.4",   b = "6356583.8")
 const eAiry       = Ellipsoid(a = "6377563.396", b = "6356256.909")
+const eNZGD2000   = Ellipsoid(a = "6378137.0", b = "6356752.3141")
 
 
 
@@ -75,6 +76,9 @@ ellipsoid(::Type{AIRY_ELLIPSE}) = eAiry
 
 immutable CLARKE66_ELLIPSE <: Ellipse end
 ellipsoid(::Type{CLARKE66_ELLIPSE}) = eClarke1866
+
+immutable NZGD2000_ELLIPSE <: Ellipse end
+ellipsoid(::Type{NZGD2000_ELLIPSE}) = eNZGD2000
 
 
 
