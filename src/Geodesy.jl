@@ -67,6 +67,7 @@ export
     WGS84,
     GRS80,
     GDA94,
+    NZGD2000,
 
     # datum functions
     get_datum,

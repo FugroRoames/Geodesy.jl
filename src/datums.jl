@@ -67,6 +67,12 @@ ellipsoid(::Type{GDA94}) = ellipsoid(GRS80_ELLIPSE)
 ref_date(::Type{GDA94}) = DateTime(1994)
 show(io::IO, ::Type{GDA94}) = print(io, "GDA94")
 
+# New Zealand
+immutable NZGD2000  <:  DynDatum; end
+ellipsoid(::Type{NZGD2000}) = ellipsoid(NZGD2000_ELLIPSE)
+ref_date(::Type{NZGD2000}) = DateTime(2000)
+show(io::IO, ::Type{NZGD2000}) = print(io, "NZGD2000")
+
 # Europia
 immutable ETRS89  <:  DynDatum; end # N.B. adopting the same notation abuse as everyone else, this is actually ETRF89
 ellipsoid(::Type{ETRS89}) = ellipsoid(GRS80_ELLIPSE)
@@ -107,6 +113,10 @@ abstract KnownGeoid <: AbstractGeoid
 # Australia
 immutable AusGeoid09 <: KnownGeoid end
 geoid_file(::Type{AusGeoid09}) = "ausgeoid09.gtx"
+
+# New Zealand
+immutable NZGeoid2016 <: KnownGeoid end
+geoid_file(::Type{NZGeoid2016}) = "nzgeoid2016.gtx"
 
 # UK
 immutable OSGM02 <: KnownGeoid end

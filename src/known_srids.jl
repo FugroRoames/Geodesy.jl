@@ -42,6 +42,8 @@ LLA{OSGB36}     :EPSG       4277;
 # Australia
 LLA{GDA94}     :EPSG        4283;
 
+# New Zealand
+LLA{NZGD2000}  :EPSG        4167;  
 
 ##############
 # ETRS89
